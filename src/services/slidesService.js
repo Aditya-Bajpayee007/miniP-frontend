@@ -1,5 +1,5 @@
 const API_URL =
-  "https://mini-p-backend-jqdb-r3t42ho4a-aditya-bajpayees-projects.vercel.app/api";
+  "https://mini-p-backend-jqdb-8f6tvt6ux-aditya-bajpayees-projects.vercel.app/api";
 
 const getAuthToken = () => {
   const user = JSON.parse(localStorage.getItem("user"));
