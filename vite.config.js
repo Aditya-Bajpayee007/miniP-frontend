@@ -8,7 +8,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api":
-        "https://mini-p-backend-nivwpmu8p-aditya-bajpayees-projects.vercel.app",
+        "https://mini-p-backend-jqdb-7zv20851t-aditya-bajpayees-projects.vercel.app",
     },
   },
 });

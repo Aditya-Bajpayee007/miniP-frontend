@@ -27,7 +27,7 @@ export const AuthProvider = ({ children }) => {
       // Try to validate the existing access token by requesting the profile
       try {
         const profileResp = await axios.get(
-          "https://mini-p-backend-nivwpmu8p-aditya-bajpayees-projects.vercel.app/api/user/profile",
+          "https://mini-p-backend-jqdb-7zv20851t-aditya-bajpayees-projects.vercel.app/api/user/profile",
           {
             headers: { Authorization: `Bearer ${storedUser.accessToken}` },
           }
