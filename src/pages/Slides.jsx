@@ -24,7 +24,7 @@ const GeminiSlideshowGenerator = () => {
   const [youtubeVideos, setYoutubeVideos] = useState([]);
   const [isLoadingVideos, setIsLoadingVideos] = useState(false);
   const [userInput, setUserInput] = useState("");
-  
+
   const [slides, setSlides] = useState([]);
   const [userMessage, setUserMessage] = useState("");
   const [error, setError] = useState("");
@@ -242,50 +242,27 @@ Avoid abstract concepts. Return as JSON format:
   const generateImageFromKeywords = async (keywords, characterStyle) => {
     try {
       // Use the experimental model that supports native image generation
-      const imageChat = ai.chats.create({
-        model: "gemini-2.0-flash-exp", // Keep this model
-        config: {
-          responseModalities: ["Text", "Image"], // Use array format, not Modality enum
-        },
-        history: [],
-      });
-
       const imagePrompt = `Create a High QUALITY, QUICKLY GENERATED illustration showing: ${keywords.join(
         ", "
       )} ${characterStyle}. Make it educational, engaging, and visually appealing. Use high resolution, minimal details, and prioritize speed over quality so the image loads and generates very fast.`;
 
-      const result = await imageChat.sendMessage({
-        message: imagePrompt,
+      const result = await ai.models.generateContent({
+        model: "gemini-2.5-flash-image",
+        contents: [{ text: imagePrompt }],
+        responseMimeType: "image/png",
       });
 
-      // Handle streaming response
-      if (result[Symbol.asyncIterator]) {
-        for await (const chunk of result) {
-          for (const candidate of chunk.candidates || []) {
-            if (candidate.content && candidate.content.parts) {
-              for (const part of candidate.content.parts) {
-                if (part.inlineData && part.inlineData.data) {
-                  return `data:image/png;base64,${part.inlineData.data}`;
-                }
-              }
-            }
-          }
-        }
-      } else {
-        // Handle non-streaming response
-        if (result.candidates && result.candidates[0]) {
-          const candidate = result.candidates[0];
-          if (candidate.content && candidate.content.parts) {
-            for (const part of candidate.content.parts) {
-              if (part.inlineData && part.inlineData.data) {
-                return `data:image/png;base64,${part.inlineData.data}`;
-              }
+      if (result.candidates && result.candidates[0]) {
+        const candidate = result.candidates[0];
+        if (candidate.content && candidate.content.parts) {
+          for (const part of candidate.content.parts) {
+            if (part.inlineData && part.inlineData.data) {
+              return `data:image/png;base64,${part.inlineData.data}`;
             }
           }
         }
       }
 
-      // If we reach here, Gemini didn't generate an image
       console.warn("Gemini image generation returned no image data");
       return null;
     } catch (error) {
@@ -716,9 +693,7 @@ Be objective and focus on factual accuracy rather than presentation style.`;
         {/* ...existing content... */}
         <div className="text-center mb-12">
           <div className="inline-block p-6 bg-white/60 backdrop-blur-xl rounded-3xl border border-white/30 shadow-2xl mb-6">
-            <h1
-              className={`text-6xl md:text-7xl font-bold text-gray-800 mb-2`}
-            >
+            <h1 className={`text-6xl md:text-7xl font-bold text-gray-800 mb-2`}>
               {currentCharacter.emoji} Visual Learner
             </h1>
             <div
@@ -801,10 +776,12 @@ Be objective and focus on factual accuracy rather than presentation style.`;
             </button>
             {user && (
               <button
-                onClick={() => !isGenerating && navigate('/profile')}
+                onClick={() => !isGenerating && navigate("/profile")}
                 disabled={isGenerating}
                 className={`px-6 py-2 rounded-lg shadow-lg bg-gradient-to-r from-amber-400 to-orange-500 text-white transition-all duration-300 ease-in-out transform hover:scale-105 ${
-                  isGenerating ? 'opacity-50 cursor-not-allowed' : 'hover:from-amber-500 hover:to-orange-600'
+                  isGenerating
+                    ? "opacity-50 cursor-not-allowed"
+                    : "hover:from-amber-500 hover:to-orange-600"
                 }`}
               >
                 My Profile
