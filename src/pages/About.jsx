@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { motion } from "framer-motion";
@@ -39,13 +39,50 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { type: "spring", bounce: 0.4 } },
 };
 
+// --- Vibe images data ---
+const VIBE_IMAGES = [
+  {
+    key: "minion",
+    label: "Minion Mode",
+    tag: "Chaotic & Fun",
+    desc: "Playful minion-style explanations to keep you hooked.",
+    img: "https://res.cloudinary.com/dturzqo8m/image/upload/v1761816164/slides/690265079d34062f5ec4f98f/xtnb2sibazlhjiiaeamx.png",
+  },
+  {
+    key: "cats",
+    label: "Tiny Cats Mode",
+    tag: "Soft & Cozy",
+    desc: "Gentle, stress-free learning with tiny cat vibes.",
+    img: "https://res.cloudinary.com/dturzqo8m/image/upload/v1761768143/slides/690265079d34062f5ec4f98f/r9wxenekbsaqumzlc9xd.png",
+  },
+  {
+    key: "comic",
+    label: "Comic Style",
+    tag: "Story-Driven",
+    desc: "Comic panels that turn complex topics into stories.",
+    img: "https://res.cloudinary.com/dturzqo8m/image/upload/v1761765025/slides/690265079d34062f5ec4f98f/qpq6awqvi4ieuglv9xqu.png",
+  },
+];
+
 const About = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
+  const [activeVibeIndex, setActiveVibeIndex] = useState(0);
+  const activeVibe = VIBE_IMAGES[activeVibeIndex];
+
   const goToHome = () => {
     if (user) navigate("/home");
   };
+
+  // Auto-cycle vibes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveVibeIndex((prev) => (prev + 1) % VIBE_IMAGES.length);
+    }, 4000); // 4 seconds
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-orange-50 selection:bg-orange-200 font-sans">
@@ -75,7 +112,7 @@ const About = () => {
           delay={4}
           duration={15}
         />
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.03]"></div>
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.03]" />
       </div>
 
       {/* --- MAIN CONTENT CONTAINER --- */}
@@ -88,7 +125,7 @@ const About = () => {
         {/* --- HERO HEADER --- */}
         <motion.div
           variants={itemVariants}
-          className="text-center max-w-4xl mb-16"
+          className="text-center max-w-4xl mb-10"
         >
           <div className="inline-block px-6 py-2 rounded-full bg-white/60 backdrop-blur-md border border-white/50 shadow-sm mb-6">
             <span className="text-orange-600 font-bold tracking-wide uppercase text-sm">
@@ -109,7 +146,25 @@ const About = () => {
           </p>
         </motion.div>
 
-        {/* --- HOW IT WORKS SECTION (NEW) --- */}
+        {/* --- CTA BUTTON (ABOVE HOW IT WORKS) --- */}
+        <motion.div
+          variants={itemVariants}
+          className="mb-16 w-full flex justify-center"
+        >
+          <motion.button
+            onClick={user ? goToHome : () => navigate("/home")}
+            whileHover={{
+              scale: 1.05,
+              boxShadow: "0px 10px 25px rgba(245, 158, 11, 0.4)",
+            }}
+            whileTap={{ scale: 0.95 }}
+            className="px-12 py-5 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 text-white text-xl font-bold shadow-xl border-2 border-transparent hover:border-white/20 transition-all backdrop-blur-sm"
+          >
+            {user ? "Start Creating Now" : "Try Visual Learner Free"}
+          </motion.button>
+        </motion.div>
+
+        {/* --- HOW IT WORKS SECTION --- */}
         <motion.div variants={itemVariants} className="w-full mb-20">
           <div className="text-center mb-10">
             <h2 className="text-3xl font-bold text-gray-800">How It Works</h2>
@@ -123,7 +178,7 @@ const About = () => {
               {
                 icon: "💭",
                 title: "1. Enter a Topic",
-                desc: "Type in any concept—from 'Quantum Physics' to 'How Coffee is Made'.",
+                desc: "Type in any concept from 'Quantum Physics' to 'How Coffee is Made'.",
                 color: "bg-blue-100 text-blue-600",
               },
               {
@@ -158,12 +213,13 @@ const About = () => {
           </div>
         </motion.div>
 
-        {/* --- THE "VIBE" SECTION (NEW) --- */}
+        {/* --- THE "VIBE" SECTION --- */}
         <motion.div
           variants={itemVariants}
           className="w-full mb-20 bg-gradient-to-br from-white/40 to-white/10 backdrop-blur-xl rounded-[3rem] p-10 border border-white/50 shadow-xl"
         >
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Left: Text & Modes */}
             <div>
               <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-6">
                 Learning Doesn't Have To Be Boring
@@ -212,13 +268,29 @@ const About = () => {
                 </li>
               </ul>
             </div>
-            <div className="relative h-80 md:h-96 w-full bg-gradient-to-tr from-amber-200 to-orange-300 rounded-3xl shadow-inner overflow-hidden flex items-center justify-center group">
-              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diagonal-stripes.png')] opacity-10"></div>
-              <div className="text-center transform group-hover:scale-105 transition-transform duration-500">
-                <span className="text-9xl drop-shadow-2xl filter">🎨</span>
-                <p className="mt-4 font-bold text-amber-900 text-xl bg-white/30 px-6 py-2 rounded-full backdrop-blur-sm">
-                  AI Image Generation
-                </p>
+
+            {/* Right: Auto-cycling image */}
+            <div className="relative w-full h-80 md:h-full bg-gradient-to-tr from-amber-200 to-orange-300 rounded-3xl shadow-inner overflow-hidden flex items-center justify-center">
+              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/diagonal-stripes.png')] opacity-10" />
+              <div className="relative z-10 w-full h-full flex flex-col">
+                {/* Image area */}
+                <div className="flex-1 flex items-center justify-center p-4">
+                  <motion.img
+                    key={activeVibe.key}
+                    src={activeVibe.img}
+                    alt={activeVibe.label}
+                    initial={{ opacity: 0, scale: 0.97 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.5 }}
+                    className="max-h-full max-w-full drop-shadow-2xl"
+                  />
+                </div>
+
+                {/* Caption */}
+                
+
+                {/* Dots indicator */}
+                
               </div>
             </div>
           </div>
@@ -301,24 +373,6 @@ const About = () => {
           </motion.div>
         </div>
 
-        {/* --- CTA BUTTON --- */}
-        <motion.div
-          variants={itemVariants}
-          className="mb-24 w-full flex justify-center"
-        >
-          <motion.button
-            onClick={user ? goToHome : () => navigate("/home")}
-            whileHover={{
-              scale: 1.05,
-              boxShadow: "0px 10px 25px rgba(245, 158, 11, 0.4)",
-            }}
-            whileTap={{ scale: 0.95 }}
-            className="px-12 py-5 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 text-white text-xl font-bold shadow-xl border-2 border-transparent hover:border-white/20 transition-all backdrop-blur-sm"
-          >
-            {user ? "Start Creating Now" : "Try Visual Learner Free"}
-          </motion.button>
-        </motion.div>
-
         {/* --- TEAM SECTION --- */}
         <motion.div variants={itemVariants} className="w-full text-center">
           <h2 className="text-4xl font-bold mb-12 text-gray-800">
@@ -367,7 +421,7 @@ const About = () => {
                 <p className="text-gray-500 text-sm font-medium uppercase mb-2">
                   Full Stack Developer
                 </p>
-                <div className="w-10 h-1 bg-orange-300 rounded-full"></div>
+                <div className="w-10 h-1 bg-orange-300 rounded-full" />
               </motion.div>
             ))}
           </div>

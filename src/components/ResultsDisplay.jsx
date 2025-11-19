@@ -8,6 +8,7 @@ const ResultsDisplay = ({
   selectedCharacter,
   currentCharacter,
   onInsertSlide,
+  onImageError, // (index) => void - called when an image fails to load
   insertedSlides = new Set(), // Provide a default empty Set
 }) => {
   if (slides.length === 0) return null;
@@ -66,6 +67,14 @@ const ResultsDisplay = ({
                           alt={`Slide ${index + 1}`}
                           className="w-full h-auto rounded-2xl shadow-2xl border-4 border-white/50 group-hover:shadow-3xl transition-shadow duration-500"
                           loading="lazy"
+                          onError={() => {
+                            // Notify parent to attempt fallback if provided
+                            try {
+                              onImageError && onImageError(index);
+                            } catch (e) {
+                              // swallow errors from callback
+                            }
+                          }}
                         />
                       </div>
                     </div>
