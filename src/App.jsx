@@ -53,9 +53,8 @@ function App() {
       }
     };
 
-    // Show profile button only when user is logged in and on protected pages
-    const showProfileButton =
-      user && !loading && isProtectedPath(location.pathname);
+    // Show profile button whenever the user is authenticated (next to About)
+    const showProfileButton = user && !loading;
 
     return (
       <header className="w-full bg-gradient-to-r from-amber-50 to-orange-50 backdrop-blur-md shadow-sm z-50 border-b border-amber-200">
@@ -76,11 +75,13 @@ function App() {
           <div className="flex items-center gap-3">
             {/* About button always available */}
             <button
-              onClick={() => navigate("/")}
-              className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100"
-              aria-label="About"
+              onClick={() =>
+                location.pathname === "/" ? navigate("/home") : navigate("/")
+              }
+              className="px-5 py-2 rounded-md text-sm font-medium text-gray-700 hover:shadow-md cursor-pointer"
+              aria-label={location.pathname === "/" ? "Home" : "About"}
             >
-              About
+              {location.pathname === "/" ? "Home" : "About"}
             </button>
 
             {/* Show Login when the user is not authenticated */}
@@ -99,11 +100,13 @@ function App() {
                 onClick={onClick}
                 disabled={isGenerating}
                 aria-disabled={isGenerating}
-                className={`px-3 py-2 rounded-md shadow bg-white text-sm font-medium text-gray-800 hover:shadow-md border border-gray-200 ${
+                className={`px-5 py-2 rounded-md text-sm font-medium text-gray-800 hover:shadow-md cursor-pointer${
                   isGenerating ? "opacity-50 cursor-not-allowed" : ""
                 }`}
               >
-                {location.pathname === "/profile" ? "Go Back" : "My Profile"}
+                {location.pathname === "/profile"
+                  ? "Go Back"
+                  : user?.firstName || user?.name || "My Profile"}
               </button>
             ) : null}
           </div>
