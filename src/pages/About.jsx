@@ -1,42 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { motion } from "framer-motion";
 
-// --- Floating Background Blob Component ---
-const FloatingBlob = ({ color, top, left, size, delay, duration }) => {
+// --- Floating Background Blob Component (static now) ---
+const FloatingBlob = ({ color, top, left, size }) => {
   return (
-    <motion.div
+    <div
       className={`absolute rounded-full mix-blend-multiply filter blur-3xl opacity-40 ${color}`}
       style={{ top, left, width: size, height: size, zIndex: 0 }}
-      animate={{
-        y: [0, -50, 0],
-        x: [0, 30, 0],
-        scale: [1, 1.1, 1],
-      }}
-      transition={{
-        duration: duration,
-        repeat: Infinity,
-        repeatType: "reverse",
-        delay: delay,
-        ease: "easeInOut",
-      }}
     />
   );
-};
-
-// --- Animation Variants ---
-const containerVariants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.15 },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0, transition: { type: "spring", bounce: 0.4 } },
 };
 
 // --- Vibe images data ---
@@ -86,47 +59,23 @@ const About = () => {
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-orange-50 selection:bg-orange-200 font-sans">
-      {/* --- FLUID BACKGROUND ANIMATION --- */}
+      {/* --- FLUID BACKGROUND --- */}
       <div className="absolute inset-0 overflow-hidden w-full h-full pointer-events-none">
         <FloatingBlob
           color="bg-amber-300"
           top="-10%"
           left="-10%"
           size="500px"
-          delay={0}
-          duration={10}
         />
-        <FloatingBlob
-          color="bg-orange-300"
-          top="40%"
-          left="80%"
-          size="400px"
-          delay={2}
-          duration={12}
-        />
-        <FloatingBlob
-          color="bg-yellow-200"
-          top="80%"
-          left="20%"
-          size="600px"
-          delay={4}
-          duration={15}
-        />
+        <FloatingBlob color="bg-orange-300" top="40%" left="80%" size="400px" />
+        <FloatingBlob color="bg-yellow-200" top="80%" left="20%" size="600px" />
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.03]" />
       </div>
 
       {/* --- MAIN CONTENT CONTAINER --- */}
-      <motion.div
-        className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 flex flex-col items-center"
-        variants={containerVariants}
-        initial="hidden"
-        animate="show"
-      >
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 flex flex-col items-center">
         {/* --- HERO HEADER --- */}
-        <motion.div
-          variants={itemVariants}
-          className="text-center max-w-4xl mb-10"
-        >
+        <div className="text-center max-w-4xl mb-10">
           <div className="inline-block px-6 py-2 rounded-full bg-white/60 backdrop-blur-md border border-white/50 shadow-sm mb-6">
             <span className="text-orange-600 font-bold tracking-wide uppercase text-sm">
               Revolutionizing Education
@@ -144,28 +93,20 @@ const About = () => {
             <strong>custom illustrations</strong>, and{" "}
             <strong>curated videos</strong>.
           </p>
-        </motion.div>
+        </div>
 
-        {/* --- CTA BUTTON (ABOVE HOW IT WORKS) --- */}
-        <motion.div
-          variants={itemVariants}
-          className="mb-16 w-full flex justify-center"
-        >
-          <motion.button
+        {/* --- CTA BUTTON --- */}
+        <div className="mb-16 w-full flex justify-center">
+          <button
             onClick={user ? goToHome : () => navigate("/home")}
-            whileHover={{
-              scale: 1.05,
-              boxShadow: "0px 10px 25px rgba(245, 158, 11, 0.4)",
-            }}
-            whileTap={{ scale: 0.95 }}
-            className="px-12 py-5 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 text-white text-xl font-bold shadow-xl border-2 border-transparent hover:border-white/20 transition-all backdrop-blur-sm"
+            className="cursor-pointer px-12 py-5 rounded-full bg-gradient-to-r from-amber-500 to-orange-600 text-white text-xl font-bold shadow-xl border-2 border-transparent hover:border-white/20 transition-all backdrop-blur-sm"
           >
             {user ? "Start Creating Now" : "Try Visual Learner Free"}
-          </motion.button>
-        </motion.div>
+          </button>
+        </div>
 
         {/* --- HOW IT WORKS SECTION --- */}
-        <motion.div variants={itemVariants} className="w-full mb-20">
+        <div className="w-full mb-20">
           <div className="text-center mb-10">
             <h2 className="text-3xl font-bold text-gray-800">How It Works</h2>
             <p className="text-gray-600">
@@ -194,9 +135,8 @@ const About = () => {
                 color: "bg-green-100 text-green-600",
               },
             ].map((step, index) => (
-              <motion.div
+              <div
                 key={index}
-                whileHover={{ y: -10 }}
                 className="bg-white/60 backdrop-blur-xl border border-white/60 p-8 rounded-3xl shadow-lg flex flex-col items-center text-center"
               >
                 <div
@@ -208,16 +148,13 @@ const About = () => {
                   {step.title}
                 </h3>
                 <p className="text-gray-600 leading-relaxed">{step.desc}</p>
-              </motion.div>
+              </div>
             ))}
           </div>
-        </motion.div>
+        </div>
 
         {/* --- THE "VIBE" SECTION --- */}
-        <motion.div
-          variants={itemVariants}
-          className="w-full mb-20 bg-gradient-to-br from-white/40 to-white/10 backdrop-blur-xl rounded-[3rem] p-10 border border-white/50 shadow-xl"
-        >
+        <div className="w-full mb-20 bg-gradient-to-br from-white/40 to-white/10 backdrop-blur-xl rounded-[3rem] p-10 border border-white/50 shadow-xl">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Left: Text & Modes */}
             <div>
@@ -275,35 +212,24 @@ const About = () => {
               <div className="relative z-10 w-full h-full flex flex-col">
                 {/* Image area */}
                 <div className="flex-1 flex items-center justify-center p-4">
-                  <motion.img
+                  <img
                     key={activeVibe.key}
                     src={activeVibe.img}
                     alt={activeVibe.label}
-                    initial={{ opacity: 0, scale: 0.97 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.5 }}
                     className="max-h-full max-w-full drop-shadow-2xl"
                   />
                 </div>
 
-                {/* Caption */}
-                
-
-                {/* Dots indicator */}
-                
+                {/* (Optional) Caption / Dots could be added here if needed */}
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* --- TECH STACK GRID --- */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full mb-20">
           {/* Tech Card */}
-          <motion.div
-            variants={itemVariants}
-            whileHover={{ y: -5 }}
-            className="p-8 rounded-3xl bg-white/40 backdrop-blur-xl border border-white/50 shadow-lg hover:shadow-2xl transition-all duration-300"
-          >
+          <div className="p-8 rounded-3xl bg-white/40 backdrop-blur-xl border border-white/50 shadow-lg hover:shadow-2xl transition-all duration-300">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-3 bg-amber-100 rounded-xl text-2xl">⚡</div>
               <h2 className="text-2xl font-bold text-gray-800">
@@ -333,14 +259,10 @@ const About = () => {
                 </span>
               </li>
             </ul>
-          </motion.div>
+          </div>
 
           {/* Benefits Card */}
-          <motion.div
-            variants={itemVariants}
-            whileHover={{ y: -5 }}
-            className="p-8 rounded-3xl bg-white/40 backdrop-blur-xl border border-white/50 shadow-lg hover:shadow-2xl transition-all duration-300"
-          >
+          <div className="p-8 rounded-3xl bg-white/40 backdrop-blur-xl border border-white/50 shadow-lg hover:shadow-2xl transition-all duration-300">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-3 bg-orange-100 rounded-xl text-2xl">🚀</div>
               <h2 className="text-2xl font-bold text-gray-800">
@@ -370,20 +292,17 @@ const About = () => {
                 </span>
               </li>
             </ul>
-          </motion.div>
+          </div>
         </div>
 
         {/* --- TEAM SECTION --- */}
-        <motion.div variants={itemVariants} className="w-full text-center">
+        <div className="w-full text-center">
           <h2 className="text-4xl font-bold mb-12 text-gray-800">
             Meet The Minds
           </h2>
 
           {/* Mentor Spotlight */}
-          <motion.div
-            whileHover={{ scale: 1.02 }}
-            className="relative mx-auto w-full max-w-md bg-white/60 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/60 p-8 mb-12 overflow-hidden group"
-          >
+          <div className="relative mx-auto w-full max-w-md bg-white/60 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/60 p-8 mb-12 overflow-hidden group">
             <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-amber-400 to-orange-500 opacity-80" />
 
             <div className="relative z-10 flex flex-col items-center">
@@ -404,14 +323,13 @@ const About = () => {
                 "Visionary guidance transforming ideas into reality."
               </p>
             </div>
-          </motion.div>
+          </div>
 
           {/* Mentees Row */}
           <div className="flex flex-col sm:flex-row justify-center gap-6">
             {["Gagan Sharma", "Aditya Bajpayee"].map((name, index) => (
-              <motion.div
+              <div
                 key={index}
-                whileHover={{ y: -8 }}
                 className="w-full sm:w-72 bg-white/50 backdrop-blur-lg rounded-2xl p-8 shadow-lg border border-white/40 flex flex-col items-center"
               >
                 <div className="w-20 h-20 mb-4 rounded-full bg-gradient-to-tr from-orange-200 to-amber-200 flex items-center justify-center text-3xl shadow-inner">
@@ -422,14 +340,14 @@ const About = () => {
                   Full Stack Developer
                 </p>
                 <div className="w-10 h-1 bg-orange-300 rounded-full" />
-              </motion.div>
+              </div>
             ))}
           </div>
-        </motion.div>
+        </div>
 
         {/* Footer Spacing */}
         <div className="h-20" />
-      </motion.div>
+      </div>
     </div>
   );
 };
