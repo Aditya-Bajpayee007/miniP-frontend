@@ -77,7 +77,9 @@ const GeminiSlideshowGenerator = () => {
 
     try {
       const res = await fetch(
-        `/api/image/search?q=${encodeURIComponent(searchQuery)}`
+        `https://mini-p-backend-jqdb.vercel.app/api/image/search?q=${encodeURIComponent(
+          searchQuery
+        )}`
       );
       const data = await res.json(); // read as JSON only once
       console.log("Backend JSON response:", data);
@@ -413,7 +415,9 @@ Be objective and focus on factual accuracy rather than presentation style.`;
     setYoutubeVideos([]);
     try {
       const res = await fetch(
-        `/api/youtube/search?q=${encodeURIComponent(query)}`
+        `https://mini-p-backend-jqdb.vercel.app/api/youtube/search?q=${encodeURIComponent(
+          query
+        )}`
       );
       const data = await res.json();
       // Expecting data.videos: [{title, url, thumbnail, views, likes, comments, channel, published}]
