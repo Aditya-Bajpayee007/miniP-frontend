@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useGeneration } from "../context/GenerationContext";
 import { saveSlides } from "../services/slidesService";
+import { uploadBase64ToCloudinary } from "../services/uploadService";
 import CharacterSelector from "../components/CharacterSelector";
 import InputSection from "../components/InputSection";
 import ExamplesSection from "../components/ExamplesSection";
@@ -644,12 +645,48 @@ Be objective and focus on factual accuracy rather than presentation style.`;
     }
 
     try {
-      setSavingStatus("Saving slides...");
-      const slidesData = slides.map((slide) => ({
-        imageUrl: slide.image || "",
-        textContent: slide.text,
-      }));
+      setSavingStatus("Preparing slides for save...");
 
+      const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+      const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+
+      const slidesData = [];
+
+      for (const slide of slides) {
+        let imageUrl = "";
+
+        // If the slide image is a data URL (base64) try to upload it to Cloudinary
+        if (
+          slide.image &&
+          typeof slide.image === "string" &&
+          slide.image.startsWith("data:image")
+        ) {
+          if (cloudName && uploadPreset) {
+            setSavingStatus("Uploading images to Cloudinary...");
+            try {
+              imageUrl = await uploadBase64ToCloudinary(
+                slide.image,
+                cloudName,
+                uploadPreset
+              );
+            } catch (e) {
+              console.warn("Cloudinary upload failed for one image:", e);
+              // Fallback: skip image to avoid sending huge payload to backend
+              imageUrl = "";
+            }
+          } else {
+            // No cloud config available — strip image to reduce payload size
+            imageUrl = "";
+          }
+        } else {
+          // Image is already a URL or absent
+          imageUrl = slide.image || "";
+        }
+
+        slidesData.push({ imageUrl, textContent: slide.text });
+      }
+
+      setSavingStatus("Saving slides...");
       await saveSlides(userMessage, slidesData, accessToken);
       setSavingStatus("Slides saved successfully!");
 
@@ -658,6 +695,7 @@ Be objective and focus on factual accuracy rather than presentation style.`;
         setSavingStatus("");
       }, 3000);
     } catch (error) {
+      console.error("Save slides flow error:", error);
       setSavingStatus("Failed to save slides. Please try again.");
     }
   };
