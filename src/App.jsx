@@ -30,7 +30,6 @@ const config = {
 };
 
 function App() {
-  // Header component placed inside App so it can be rendered within AuthProvider
   const Header = () => {
     const location = useLocation();
     const navigate = useNavigate();
