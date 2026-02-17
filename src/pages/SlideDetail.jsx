@@ -2,6 +2,7 @@ import React from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { getSlideById } from "../services/slidesService";
 import ResultsDisplay from "../components/ResultsDisplay";
+import SlideVideoGenerator from "../components/SlideVideoGenerator";
 import { usePageLoading } from "../context/PageLoadingContext";
 import { ArrowLeft, Loader2, AlertCircle, BookOpen, Calendar, Clock } from "lucide-react";
 import { motion } from "framer-motion";
@@ -167,6 +168,7 @@ const SlideDetail = () => {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3, duration: 0.5 }}
         >
+          <SlideVideoGenerator />
           <ResultsDisplay slides={slide.slidesData} />
         </motion.div>
 

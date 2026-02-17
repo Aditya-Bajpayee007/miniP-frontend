@@ -1,14 +1,74 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <!-- <link rel="icon" type="image/svg+xml" href="/vite.svg" /> -->
     <link rel="icon" type="image/png" href="/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Visual Learner</title>
+
+    <style>
+      /* Hide default Google widget completely */
+      #google_translate_element {
+        display: none;
+      }
+
+      /* Hide top banner */
+      .goog-te-banner-frame.skiptranslate {
+        display: none !important;
+      }
+
+      body {
+        top: 0px !important;
+      }
+    </style>
   </head>
+
   <body>
+    <!-- Hidden Google Translate -->
+    <div id="google_translate_element"></div>
+
+    <!-- Custom Language Button (Tailwind Styled) -->
+    <div class="fixed top-4 right-6 z-[9999]">
+      <select
+        onchange="changeLanguage(this.value)"
+        class="bg-gradient-to-r from-amber-500 via-orange-300 to-orange-300 text-gray-900 font-medium text-sm px-2 mr-2 py-2 rounded-xl shadow-lg transition-all cursor-pointer outline-none"
+      >
+        <!-- <option value="">🌐 Language</option> -->
+        <option value="en">English</option>
+        <option value="hi">Hindi</option>
+        <option value="gu">Gujarati</option>
+        <option value="pa">Punjabi</option>
+        <option value="bn">Bengali</option>
+        <option value="te">Telugu</option>
+        <option value="mr">Marathi</option>
+        <option value="ta">Tamil</option>
+      </select>
+    </div>
+
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+
+    <!-- Google Script -->
+    <script>
+      function googleTranslateElementInit() {
+        new google.translate.TranslateElement(
+          {
+            pageLanguage: "en",
+            autoDisplay: false,
+          },
+          "google_translate_element",
+        );
+      }
+
+      function changeLanguage(lang) {
+        const select = document.querySelector(".goog-te-combo");
+        if (select) {
+          select.value = lang;
+          select.dispatchEvent(new Event("change"));
+        }
+      }
+    </script>
+
+    <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
   </body>
 </html>

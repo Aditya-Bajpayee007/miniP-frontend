@@ -38,7 +38,7 @@ const GeminiSlideshowGenerator = () => {
   const abortControllerRef = useRef(null);
 
   const ai = new GoogleGenAI({
-    apiKey: import.meta.env.VITE_GEMINI_API_KEY,
+    apiKey: import.meta.env.VITE_GEMINI_API_KEY || "none",
   });
 
   // Your character options remain the same
@@ -79,8 +79,8 @@ const GeminiSlideshowGenerator = () => {
     try {
       const res = await fetch(
         `https://mini-p-backend-jqdb.vercel.app/api/image/search?q=${encodeURIComponent(
-          searchQuery
-        )}`
+          searchQuery,
+        )}`,
       );
       const data = await res.json(); // read as JSON only once
       console.log("Backend JSON response:", data);
@@ -185,7 +185,7 @@ Style: ${character.instruction}`;
     return text
       .replace(
         /^(Slide \d+:?|Step \d+:?|Part \d+:?|Section \d+:?|Chapter \d+:?)\s*/i,
-        ""
+        "",
       )
       .replace(/^([A-Z][^.!?]*:)\s*/gm, "")
       .trim();
@@ -246,7 +246,7 @@ Avoid abstract concepts. Return as JSON format:
     try {
       // Use the experimental model that supports native image generation
       const imagePrompt = `Create a High QUALITY, QUICKLY GENERATED illustration showing: ${keywords.join(
-        ", "
+        ", ",
       )} ${characterStyle}. Make it educational, engaging, and visually appealing. Use high resolution, minimal details, and prioritize speed over quality so the image loads and generates very fast.`;
 
       const result = await ai.models.generateContent({
@@ -320,13 +320,13 @@ Be objective and focus on factual accuracy rather than presentation style.`;
 
       const scoreMatch = responseText.match(/CONFIDENCE_SCORE:\s*(\d+)/);
       const reasoningMatch = responseText.match(
-        /REASONING:\s*(.*?)(?=STRENGTHS:|$)/s
+        /REASONING:\s*(.*?)(?=STRENGTHS:|$)/s,
       );
       const strengthsMatch = responseText.match(
-        /STRENGTHS:\s*(.*?)(?=AREAS_FOR_IMPROVEMENT:|$)/s
+        /STRENGTHS:\s*(.*?)(?=AREAS_FOR_IMPROVEMENT:|$)/s,
       );
       const improvementsMatch = responseText.match(
-        /AREAS_FOR_IMPROVEMENT:\s*(.*?)$/s
+        /AREAS_FOR_IMPROVEMENT:\s*(.*?)$/s,
       );
 
       const confidence = {
@@ -417,8 +417,8 @@ Be objective and focus on factual accuracy rather than presentation style.`;
     try {
       const res = await fetch(
         `https://mini-p-backend-jqdb.vercel.app/api/youtube/search?q=${encodeURIComponent(
-          query
-        )}`
+          query,
+        )}`,
       );
       const data = await res.json();
       // Expecting data.videos: [{title, url, thumbnail, views, likes, comments, channel, published}]
@@ -470,7 +470,7 @@ Be objective and focus on factual accuracy rather than presentation style.`;
         messages: [
           {
             role: "system",
-            content: `You are an expert explainer for educational slides. Follow the instructions below.\n${getAdditionalInstructions()}`,
+            content: `You are an expert explainer for educational slides. Follow the instructions below.\n${getAdditionalInstructions()}, Always respond in the same language as the user.`,
           },
           {
             role: "user",
@@ -549,8 +549,8 @@ Be objective and focus on factual accuracy rather than presentation style.`;
           if (!imageUrl) {
             console.log(
               `Gemini failed for keywords: ${keywords.join(
-                ", "
-              )}. Falling back to SERPAPI search.`
+                ", ",
+              )}. Falling back to SERPAPI search.`,
             );
             imageUrl = await searchImageOnWeb(keywords);
           }
@@ -667,7 +667,7 @@ Be objective and focus on factual accuracy rather than presentation style.`;
               imageUrl = await uploadBase64ToCloudinary(
                 slide.image,
                 cloudName,
-                uploadPreset
+                uploadPreset,
               );
             } catch (e) {
               console.warn("Cloudinary upload failed for one image:", e);
@@ -835,8 +835,8 @@ Be objective and focus on factual accuracy rather than presentation style.`;
                   savingStatus.includes("success")
                     ? "text-green-600"
                     : savingStatus.includes("Failed")
-                    ? "text-red-600"
-                    : "text-blue-600"
+                      ? "text-red-600"
+                      : "text-blue-600"
                 }`}
               >
                 {savingStatus}

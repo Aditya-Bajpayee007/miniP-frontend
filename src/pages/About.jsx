@@ -84,7 +84,7 @@ const About = () => {
           <h1 className="text-5xl md:text-7xl font-black tracking-tight mb-6 text-gray-900 leading-tight">
             Turn Complexity into <br />
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-600 via-orange-500 to-red-500">
-              Visual
+              Visual Clarity
             </span>
           </h1>
           <p className="text-xl md:text-2xl text-gray-700 font-light leading-relaxed max-w-3xl mx-auto">
