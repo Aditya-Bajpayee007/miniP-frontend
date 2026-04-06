@@ -22,3 +22,24 @@ export const uploadBase64ToCloudinary = async (
   const json = await res.json();
   return json.secure_url || json.url;
 };
+
+export const uploadPDF = async (file) => {
+  if (!file) throw new Error("No file provided");
+
+  const url = `${import.meta.env.VITE_API_BASE}/api/upload/pdf`;
+  const formData = new FormData();
+  formData.append("pdf", file);
+
+  const res = await fetch(url, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`PDF upload failed: ${res.status} ${text}`);
+  }
+
+  const json = await res.json();
+  return json;
+};
