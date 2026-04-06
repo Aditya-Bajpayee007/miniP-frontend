@@ -78,7 +78,7 @@ const GeminiSlideshowGenerator = () => {
 
     try {
       const res = await fetch(
-        `https://mini-p-backend-jqdb.vercel.app/api/image/search?q=${encodeURIComponent(
+        `http://localhost:3000/api/image/search?q=${encodeURIComponent(
           searchQuery
         )}`
       );
@@ -416,7 +416,7 @@ Be objective and focus on factual accuracy rather than presentation style.`;
     setYoutubeVideos([]);
     try {
       const res = await fetch(
-        `https://mini-p-backend-jqdb.vercel.app/api/youtube/search?q=${encodeURIComponent(
+        `http://localhost:3000/api/youtube/search?q=${encodeURIComponent(
           query
         )}`
       );

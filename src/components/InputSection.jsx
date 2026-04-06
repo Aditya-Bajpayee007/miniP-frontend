@@ -1,5 +1,7 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { motion } from "framer-motion";
+import { useGeneration } from "../context/GenerationContext";
+import { uploadPDF } from "../services/uploadService";
 
 const InputSection = ({
   userInput,
@@ -27,6 +29,40 @@ const InputSection = ({
   const randomPlaceholder =
     placeholders[Math.floor(Math.random() * placeholders.length)];
 
+  const [pdfFile, setPdfFile] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const genCtx = useGeneration();
+
+  const handlePdfChange = (e) => {
+    const f = e.target.files && e.target.files[0];
+    setPdfFile(f || null);
+  };
+
+  const handleUploadAndGenerate = async () => {
+    if (!pdfFile) return;
+    setIsUploading(true);
+    try {
+      const json = await uploadPDF(pdfFile);
+      const extracted = json.text || json.extractedText || json.content || null;
+      if (!extracted) {
+        throw new Error("No extracted text returned from server");
+      }
+
+      // Prefer context-provided generate if present, otherwise fallback to prop
+      if (genCtx && typeof genCtx.generate === "function") {
+        await genCtx.generate(extracted);
+      } else {
+        await generate(extracted);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to upload PDF: " + (err.message || "Unknown error"));
+    } finally {
+      setIsUploading(false);
+      setPdfFile(null);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 15 }}
@@ -40,6 +76,37 @@ const InputSection = ({
       <h3 className="text-3xl font-extrabold text-amber-700 mb-8 text-center tracking-tight drop-shadow-sm transition-all duration-300 hover:drop-shadow-[0_0_12px_rgba(245,158,11,0.5)]">
         💭 What would you like to learn about?
       </h3>
+
+      {/* PDF Upload Section */}
+      <div className="mb-6">
+        <h4 className="text-xl font-semibold text-gray-700 mb-3 text-center">
+          📁 Do you have something of your own?
+        </h4>
+
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <input
+            type="file"
+            accept=".pdf"
+            onChange={handlePdfChange}
+            disabled={isUploading || isGenerating}
+            className="block w-full sm:w-auto text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-100 file:text-amber-700"
+          />
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleUploadAndGenerate}
+              disabled={!pdfFile || isUploading || isGenerating}
+              className={`px-6 py-3 bg-gradient-to-r ${currentCharacter.gradient} text-white font-bold rounded-2xl shadow-lg disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              {isUploading ? "Uploading..." : "Upload and Generate Story"}
+            </button>
+
+            {pdfFile && (
+              <div className="text-sm text-gray-600">{pdfFile.name}</div>
+            )}
+          </div>
+        </div>
+      </div>
 
 
       {/* Textarea */}
