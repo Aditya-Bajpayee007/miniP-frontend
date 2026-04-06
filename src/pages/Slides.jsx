@@ -11,10 +11,8 @@ import UserMessageDisplay from "../components/UserMessageDisplay";
 import ConfidenceScoreDisplay from "../components/ConfidenceScoreDisplay";
 import LoadingAnimation from "../components/LoadingAnimation";
 import ResultsDisplay from "../components/ResultsDisplay";
-import { GoogleGenAI, Modality } from "@google/genai";
 import { marked } from "marked";
 import Groq from "groq-sdk";
-import { getJson } from "serpapi";
 import { Link, useNavigate } from "react-router-dom";
 
 const GeminiSlideshowGenerator = () => {
@@ -36,10 +34,6 @@ const GeminiSlideshowGenerator = () => {
   const [isAnalyzingConfidence, setIsAnalyzingConfidence] = useState(false);
   const textareaRef = useRef(null);
   const abortControllerRef = useRef(null);
-
-  const ai = new GoogleGenAI({
-    apiKey: import.meta.env.VITE_GEMINI_API_KEY || "none",
-  });
 
   // Your character options remain the same
   const characterOptions = {
@@ -70,24 +64,132 @@ const GeminiSlideshowGenerator = () => {
     },
   };
 
-  // Function to search for images using SERPAPI
+  // Function to search for images using SERPAPI and enhance with SD model
+  const searchAndEnhanceImage = async (keywords) => {
+    if (!keywords || keywords.length === 0) return null;
+
+    const searchQuery = keywords.join(" ");
+    const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+    try {
+      // Step 1: Get image from SERPAPI
+      const res = await fetch(
+        `${baseUrl.replace(/\/$/, "")}/api/image/search?q=${encodeURIComponent(
+          searchQuery,
+        )}`,
+        { method: "GET" },
+      );
+
+      if (!res.ok) {
+        console.warn("Image search returned non-OK status", res.status);
+        return null;
+      }
+
+      const data = await res.json();
+      console.log("Backend JSON response (image search):", data);
+
+      const serpApiImageUrl = data.image || null;
+      if (!serpApiImageUrl) {
+        console.warn("No image found from SERPAPI");
+        return null;
+      }
+
+      // Step 2: Enhance image with SD model via backend endpoint
+      try {
+        const enhancedImage = await enhanceImageWithSD(
+          serpApiImageUrl,
+          keywords,
+          baseUrl
+        );
+        return enhancedImage || serpApiImageUrl; // Fallback to original if enhancement fails
+      } catch (sdError) {
+        console.warn("SD model enhancement failed, using original SERPAPI image:", sdError);
+        return serpApiImageUrl;
+      }
+    } catch (error) {
+      console.error("Image search failed:", error?.message || error);
+      return null;
+    }
+  };
+
+  // Function to enhance image using SD model via backend endpoint
+  const enhanceImageWithSD = async (imageUrl, keywords, baseUrl) => {
+    try {
+      console.log(`Enhancing image with SD model: ${imageUrl.substring(0, 50)}...`);
+
+      // Create a prompt for the SD model
+      const enhancementPrompt = `Enhance and refine this image focusing on: ${keywords.join(
+        ", ",
+      )}. Make it more educational, vivid, and visually appealing. Maintain the original content while improving quality and clarity.`;
+
+      // Call backend endpoint which proxies to SD model
+      const response = await fetch(
+        `${baseUrl.replace(/\/$/, "")}/api/image/enhance`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            image_url: imageUrl,
+            prompt: enhancementPrompt,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        console.warn(`SD enhancement returned status ${response.status}`);
+        return null;
+      }
+
+      const result = await response.json();
+
+      // Check if response contains enhanced image data
+      if (result.image || result.image_url || result.enhanced_image) {
+        const enhancedUrl = result.image || result.image_url || result.enhanced_image;
+        console.log("SD enhancement successful");
+        return enhancedUrl;
+      }
+
+      // If response is a base64 image directly
+      if (result.data && typeof result.data === "string") {
+        return `data:image/png;base64,${result.data}`;
+      }
+
+      console.warn("SD model did not return expected image format");
+      return null;
+    } catch (error) {
+      console.error("SD model enhancement error:", error);
+      return null;
+    }
+  };
+
+  // Keep original searchImageOnWeb as fallback (for backward compatibility)
   const searchImageOnWeb = async (keywords) => {
     if (!keywords || keywords.length === 0) return null;
 
     const searchQuery = keywords.join(" ");
+    const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
     try {
       const res = await fetch(
-        `https://mini-p-backend-jqdb.vercel.app/api/image/search?q=${encodeURIComponent(
+        `${baseUrl.replace(/\/$/, "")}/api/image/search?q=${encodeURIComponent(
           searchQuery,
         )}`,
+        { method: "GET" },
       );
-      const data = await res.json(); // read as JSON only once
-      console.log("Backend JSON response:", data);
+
+      if (!res.ok) {
+        console.warn("Image search returned non-OK status", res.status);
+        return null;
+      }
+
+      const data = await res.json();
+      console.log("Backend JSON response (image search):", data);
 
       return data.image || null;
     } catch (error) {
-      console.error("Image search failed:", error);
+      console.error("Image search failed:", error?.message || error);
       return null;
     }
   };
@@ -238,39 +340,6 @@ Avoid abstract concepts. Return as JSON format:
       // Simple fallback extraction
       const words = text.toLowerCase().match(/\b[a-z]{3,}\b/g) || [];
       return words.slice(0, 5);
-    }
-  };
-
-  // Function to generate image using Gemini Imagen (now with better error handling)
-  const generateImageFromKeywords = async (keywords, characterStyle) => {
-    try {
-      // Use the experimental model that supports native image generation
-      const imagePrompt = `Create a High QUALITY, QUICKLY GENERATED illustration showing: ${keywords.join(
-        ", ",
-      )} ${characterStyle}. Make it educational, engaging, and visually appealing. Use high resolution, minimal details, and prioritize speed over quality so the image loads and generates very fast.`;
-
-      const result = await ai.models.generateContent({
-        model: "gemini-2.5-flash-image",
-        contents: [{ text: imagePrompt }],
-        responseMimeType: "image/png",
-      });
-
-      if (result.candidates && result.candidates[0]) {
-        const candidate = result.candidates[0];
-        if (candidate.content && candidate.content.parts) {
-          for (const part of candidate.content.parts) {
-            if (part.inlineData && part.inlineData.data) {
-              return `data:image/png;base64,${part.inlineData.data}`;
-            }
-          }
-        }
-      }
-
-      console.warn("Gemini image generation returned no image data");
-      return null;
-    } catch (error) {
-      console.warn("Gemini image generation failed:", error);
-      return null;
     }
   };
 
@@ -542,21 +611,11 @@ Be objective and focus on factual accuracy rather than presentation style.`;
         let imageUrl = null;
 
         if (keywords.length > 0) {
-          // Try Gemini first
-          imageUrl = await generateImageFromKeywords(keywords, character.style);
-
-          // If Gemini fails, fallback to SERPAPI search
-          if (!imageUrl) {
-            console.log(
-              `Gemini failed for keywords: ${keywords.join(
-                ", ",
-              )}. Falling back to SERPAPI search.`,
-            );
-            imageUrl = await searchImageOnWeb(keywords);
-          }
+          // Use SERPAPI directly with SD model enhancement
+          imageUrl = await searchAndEnhanceImage(keywords);
         }
 
-        // If both Gemini and SERPAPI fail, remove the image property from the slide (show only text)
+        // Update slide with image (or keep text-only if image generation failed)
         setSlides((currentSlides) => {
           const updatedSlides = [...currentSlides];
           if (imageUrl) {
@@ -567,7 +626,7 @@ Be objective and focus on factual accuracy rather than presentation style.`;
               title: slideTitle,
             };
           } else {
-            // Remove image property so only text is shown
+            // Keep text-only if image generation failed
             updatedSlides[i] = {
               text: htmlText,
               keywords: keywords,
