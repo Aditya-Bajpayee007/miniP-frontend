@@ -20,7 +20,7 @@ const SlideVideoGenerator = () => {
 
     setLoading(true);
     try {
-      const res = await fetch("http://127.0.0.1:5050/api/video/generate", {
+      const res = await fetch("https://mini-p-backend-jqdb.vercel.app/api/video/generate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
