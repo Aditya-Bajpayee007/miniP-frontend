@@ -327,7 +327,7 @@ const About = () => {
 
           {/* Mentees Row */}
           <div className="flex flex-col sm:flex-row justify-center gap-6">
-            {["Aditya Bajpayee (23UCS511)", "Aditya Srivastava (23UCS518)", "Gagan Sharma (23UCS576)"].map((name, index) => (
+            {["Aditya Bajpayee", "Aditya Srivastava", "Gagan Sharma"].map((name, index) => (
               <div
                 key={index}
                 className="w-full sm:w-72 bg-white/50 backdrop-blur-lg rounded-2xl p-8 shadow-lg border border-white/40 flex flex-col items-center"
