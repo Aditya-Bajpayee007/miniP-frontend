@@ -234,7 +234,7 @@ Instructions:
 Style: ${character.instruction}`;
 
       const completion = await groq.chat.completions.create({
-        model: "llama-3.3-70b-versatile",
+        model: "openai/gpt-oss-120b",
         messages: [
           {
             role: "system",
@@ -303,7 +303,7 @@ Style: ${character.instruction}`;
   const extractKeywords = async (text) => {
     try {
       const completion = await groq.chat.completions.create({
-        model: "llama-3.3-70b-versatile",
+        model: "openai/gpt-oss-120b",
         messages: [
           {
             role: "system",
@@ -369,7 +369,7 @@ AREAS_FOR_IMPROVEMENT: [list 1-2 areas that could be improved, if any]
 Be objective and focus on factual accuracy rather than presentation style.`;
 
       const completion = await groq.chat.completions.create({
-        model: "llama-3.3-70b-versatile",
+        model: "openai/gpt-oss-120b",
         messages: [
           {
             role: "system",
@@ -535,7 +535,7 @@ Be objective and focus on factual accuracy rather than presentation style.`;
       setProgress(10);
       let fullTextContent = "";
       const completion = await groq.chat.completions.create({
-        model: "llama-3.3-70b-versatile",
+        model: "openai/gpt-oss-120b",
         messages: [
           {
             role: "system",
