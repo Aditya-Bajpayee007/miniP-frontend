@@ -27,7 +27,7 @@ export const AuthProvider = ({ children }) => {
       // Try to validate the existing access token by requesting the profile
       try {
         const profileResp = await axios.get(
-          "https://mini-p-backend-jqdb-8f6tvt6ux-aditya-bajpayees-projects.vercel.app/api/user/profile",
+          `${import.meta.env.VITE_API_BASE || "https://mini-p-backend-jqdb.vercel.app"}/api/user/profile`,
           {
             headers: { Authorization: `Bearer ${storedUser.accessToken}` },
           }
@@ -51,7 +51,7 @@ export const AuthProvider = ({ children }) => {
 
             // Retry profile fetch with new token
             const profileResp2 = await axios.get(
-              "https://mini-p-backend-fqh00lqjh-aditya-bajpayees-projects.vercel.app/api/user/profile",
+              `${import.meta.env.VITE_API_BASE || "https://mini-p-backend-jqdb.vercel.app"}/api/user/profile`,
               {
                 headers: { Authorization: `Bearer ${newAccessToken}` },
               }

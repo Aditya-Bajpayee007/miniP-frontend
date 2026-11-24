@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API_URL =
-  "https://mini-p-backend-jqdb-8f6tvt6ux-aditya-bajpayees-projects.vercel.app/api/auth/";
+  (import.meta.env.VITE_API_BASE || "https://mini-p-backend-jqdb.vercel.app") + "/api/auth/";
 
 const signup = (name, email, password) => {
   return axios.post(API_URL + "signup", {
