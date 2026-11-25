@@ -64,114 +64,51 @@ const GeminiSlideshowGenerator = () => {
     },
   };
 
-  // Function to search for images using SERPAPI and enhance with SD model
-  const searchAndEnhanceImage = async (keywords) => {
-    if (!keywords || keywords.length === 0) return null;
+  // Function to generate AI image using Cloudflare Workers AI via backend
+  const generateCloudflareImage = async (keywords, slideText) => {
+    const baseUrl = import.meta.env.VITE_API_BASE || "https://mini-p-backend-jqdb.vercel.app";
+    const character = characterOptions[selectedCharacter];
 
-    const searchQuery = keywords.join(" ");
-    const baseUrl = import.meta.env.VITE_API_URL || "https://mini-p-backend-jqdb.vercel.app";
+    // Build a descriptive prompt from keywords + slide context
+    const prompt = `Educational illustration: ${keywords.join(", ")}. ${character.style}. High quality, clear, visually appealing for educational presentation.`;
 
     try {
-      // Step 1: Get image from SERPAPI
       const res = await fetch(
-        `${baseUrl.replace(/\/$/, "")}/api/image/search?q=${encodeURIComponent(
-          searchQuery,
-        )}`,
-        { method: "GET" },
+        `${baseUrl.replace(/\/$/, "")}/api/image/generate`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt }),
+        }
       );
 
       if (!res.ok) {
-        console.warn("Image search returned non-OK status", res.status);
+        console.warn(`Cloudflare AI image generation returned status ${res.status}`);
         return null;
       }
 
       const data = await res.json();
-      console.log("Backend JSON response (image search):", data);
-
-      const serpApiImageUrl = data.image || null;
-      if (!serpApiImageUrl) {
-        console.warn("No image found from SERPAPI");
-        return null;
+      if (data.success && data.image) {
+        console.log("✅ Cloudflare AI image generated successfully");
+        return data.image;
       }
 
-      // Step 2: Enhance image with SD model via backend endpoint
-      try {
-        const enhancedImage = await enhanceImageWithSD(
-          serpApiImageUrl,
-          keywords,
-          baseUrl
-        );
-        return enhancedImage || serpApiImageUrl; // Fallback to original if enhancement fails
-      } catch (sdError) {
-        console.warn("SD model enhancement failed, using original SERPAPI image:", sdError);
-        return serpApiImageUrl;
-      }
+      return null;
     } catch (error) {
-      console.error("Image search failed:", error?.message || error);
+      console.warn("Cloudflare AI image generation failed:", error?.message || error);
       return null;
     }
   };
 
-  // Function to enhance image using SD model via backend endpoint
-  const enhanceImageWithSD = async (imageUrl, keywords, baseUrl) => {
-    try {
-      console.log(`Enhancing image with SD model: ${imageUrl.substring(0, 50)}...`);
-
-      // Create a prompt for the SD model
-      const enhancementPrompt = `Enhance and refine this image focusing on: ${keywords.join(
-        ", ",
-      )}. Make it more educational, vivid, and visually appealing. Maintain the original content while improving quality and clarity.`;
-
-      // Call backend endpoint which proxies to SD model
-      const response = await fetch(
-        `${baseUrl.replace(/\/$/, "")}/api/image/enhance`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            image_url: imageUrl,
-            prompt: enhancementPrompt,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        console.warn(`SD enhancement returned status ${response.status}`);
-        return null;
-      }
-
-      const result = await response.json();
-
-      // Check if response contains enhanced image data
-      if (result.image || result.image_url || result.enhanced_image) {
-        const enhancedUrl = result.image || result.image_url || result.enhanced_image;
-        console.log("SD enhancement successful");
-        return enhancedUrl;
-      }
-
-      // If response is a base64 image directly
-      if (result.data && typeof result.data === "string") {
-        return `data:image/png;base64,${result.data}`;
-      }
-
-      console.warn("SD model did not return expected image format");
-      return null;
-    } catch (error) {
-      console.error("SD model enhancement error:", error);
-      return null;
-    }
-  };
-
-  // Keep original searchImageOnWeb as fallback (for backward compatibility)
-  const searchImageOnWeb = async (keywords) => {
+  // Function to search for images using SERPAPI (fallback)
+  const searchAndEnhanceImage = async (keywords) => {
     if (!keywords || keywords.length === 0) return null;
 
     const searchQuery = keywords.join(" ");
-    const baseUrl = import.meta.env.VITE_API_URL || "https://mini-p-backend-jqdb.vercel.app";
+    const baseUrl = import.meta.env.VITE_API_BASE || "https://mini-p-backend-jqdb.vercel.app";
 
     try {
+      // Step 1: Get image from SERPAPI
       const res = await fetch(
         `${baseUrl.replace(/\/$/, "")}/api/image/search?q=${encodeURIComponent(
           searchQuery,
@@ -438,7 +375,7 @@ Be objective and focus on factual accuracy rather than presentation style.`;
     - Generate exactly 7 slides explaining the topic.
     - Each slide MUST start with a heading in this format:
       Slide Heading: [Short, clear title for this slide]
-    - After the heading, write 1–2 concise sentences explaining the concept.
+    - After the heading, write 2-3 concise sentences explaining the concept.
     - Write in a clear, educational, conversational tone.
     - Avoid repeating the same sentence or phrase.
     - If the topic is technical or educational, include formulas or key expressions where appropriate.
@@ -616,8 +553,14 @@ Be objective and focus on factual accuracy rather than presentation style.`;
         let imageUrl = null;
 
         if (keywords.length > 0) {
-          // Use SERPAPI directly with SD model enhancement
-          imageUrl = await searchAndEnhanceImage(keywords);
+          // Step A: Try Cloudflare AI image generation first
+          imageUrl = await generateCloudflareImage(keywords, textSegment);
+
+          // Step B: If Cloudflare fails, fall back to SerpAPI image search
+          if (!imageUrl) {
+            console.log("Cloudflare AI failed, falling back to SerpAPI image search...");
+            imageUrl = await searchAndEnhanceImage(keywords);
+          }
         }
 
         // Update slide with image (or keep text-only if image generation failed)
