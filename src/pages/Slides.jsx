@@ -86,63 +86,74 @@ const GeminiSlideshowGenerator = () => {
     // Build a descriptive prompt from extracted keywords or full slide text
     const prompt = `Educational illustration: ${subject}. ${character.style}. High quality, clear, visually appealing for educational presentation.`;
 
-    try {
-      const res = await fetch(
-        `${baseUrl.replace(/\/$/, "")}/api/image/generate`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt }),
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const res = await fetch(
+          `${baseUrl.replace(/\/$/, "")}/api/image/generate`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ prompt }),
+          }
+        );
+
+        if (!res.ok) {
+          console.warn(`Cloudflare AI image generation returned status ${res.status}`);
+          return null;
         }
-      );
 
-      if (!res.ok) {
-        console.warn(`Cloudflare AI image generation returned status ${res.status}`);
+        const data = await res.json();
+        if (data.success && data.image) {
+          console.log("✅ Cloudflare AI image generated successfully");
+          return data.image;
+        }
+
         return null;
+      } catch (error) {
+        console.warn(`Cloudflare AI image generation attempt ${attempt + 1} failed:`, error?.message || error);
+        if (attempt === 1) return null;
       }
-
-      const data = await res.json();
-      if (data.success && data.image) {
-        console.log("✅ Cloudflare AI image generated successfully");
-        return data.image;
-      }
-
-      return null;
-    } catch (error) {
-      console.warn("Cloudflare AI image generation failed:", error?.message || error);
-      return null;
     }
+    return null;
   };
 
   // Function to search for images using SERPAPI (fallback)
   const searchAndEnhanceImage = async (keywords) => {
     if (!keywords || keywords.length === 0) return null;
 
-    const searchQuery = keywords.join(" ");
+    const searchQuery = keywords.join(" ").replace(/\s+/g, " ").trim().slice(0, 120);
+    if (!searchQuery) return null;
+
     const baseUrl = import.meta.env.VITE_API_BASE || "https://mini-p-backend-jqdb.vercel.app";
 
-    try {
-      // Step 1: Get image from SERPAPI
-      const res = await fetch(
-        `${baseUrl.replace(/\/$/, "")}/api/image/search?q=${encodeURIComponent(
-          searchQuery,
-        )}`,
-        { method: "GET" },
-      );
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        // Step 1: Get image from SERPAPI
+        const res = await fetch(
+          `${baseUrl.replace(/\/$/, "")}/api/image/search?q=${encodeURIComponent(
+            searchQuery,
+          )}`,
+          { method: "GET" },
+        );
 
-      if (!res.ok) {
-        console.warn("Image search returned non-OK status", res.status);
-        return null;
+        if (!res.ok) {
+          console.warn("Image search returned non-OK status", res.status);
+          return null;
+        }
+
+        const data = await res.json();
+        console.log("Backend JSON response (image search):", data);
+
+        return data.image || null;
+      } catch (error) {
+        console.warn(`Image search attempt ${attempt + 1} failed:`, error?.message || error);
+        if (attempt === 1) {
+          console.error("Image search failed:", error?.message || error);
+          return null;
+        }
       }
-
-      const data = await res.json();
-      console.log("Backend JSON response (image search):", data);
-
-      return data.image || null;
-    } catch (error) {
-      console.error("Image search failed:", error?.message || error);
-      return null;
     }
+    return null;
   };
 
   const handleInsertSlide = async (insertIndex) => {
@@ -273,8 +284,9 @@ Avoid abstract concepts. You MUST respond with ONLY valid JSON, no extra text:
           },
         ],
         temperature: 0.1,
-        max_completion_tokens: 150,
+        max_completion_tokens: 512,
         top_p: 1,
+        reasoning_effort: "low",
         stream: false,
       });
 
@@ -579,7 +591,7 @@ Be objective and focus on factual accuracy rather than presentation style.`;
           const fallbackQuery =
             Array.isArray(keywords) && keywords.length > 0
               ? keywords
-              : [fullSlideText];
+              : [slideTitle || fullSlideText.slice(0, 120)];
           imageUrl = await searchAndEnhanceImage(fallbackQuery);
         }
 
