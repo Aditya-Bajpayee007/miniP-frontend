@@ -548,19 +548,38 @@ Be objective and focus on factual accuracy rather than presentation style.`;
           { text: htmlText, image: null, keywords: [], title: slideTitle },
         ]);
 
-        // Then process keywords and generate image in the background
-        const keywords = await extractKeywords(textSegment);
+        // Then process keywords and generate image
+        let keywords = await extractKeywords(textSegment);
+
+        // Ensure we always have keywords for image generation
+        // If extraction failed, derive from slide title or text directly
+        if (!keywords || keywords.length === 0) {
+          if (slideTitle) {
+            keywords = [slideTitle];
+          } else {
+            // Extract meaningful words from the text as fallback
+            const plainText = textSegment.replace(/<[^>]+>/g, "").replace(/[#*_`]/g, "");
+            const words = plainText.match(/\b[a-zA-Z]{4,}\b/g) || [];
+            // Remove common stop words
+            const stopWords = new Set(["this", "that", "with", "from", "have", "been", "were", "they", "their", "about", "which", "when", "what", "will", "would", "could", "should", "into", "also", "more", "some", "than", "them", "then", "these", "other", "each", "make", "like", "just", "over", "such", "take", "only", "come", "made", "after", "back", "most", "very"]);
+            const filtered = words.filter(w => !stopWords.has(w.toLowerCase()));
+            keywords = [...new Set(filtered)].slice(0, 5);
+          }
+        }
+
         let imageUrl = null;
 
-        if (keywords.length > 0) {
-          // Step A: Try Cloudflare AI image generation first
-          imageUrl = await generateCloudflareImage(keywords, textSegment);
+        // Step A: Try Cloudflare AI image generation first
+        imageUrl = await generateCloudflareImage(keywords, textSegment);
 
-          // Step B: If Cloudflare fails, fall back to SerpAPI image search
-          if (!imageUrl) {
-            console.log("Cloudflare AI failed, falling back to SerpAPI image search...");
-            imageUrl = await searchAndEnhanceImage(keywords);
-          }
+        // Step B: If Cloudflare fails, fall back to SerpAPI image search
+        if (!imageUrl) {
+          console.log(`Slide ${i + 1}: Cloudflare AI failed, falling back to SerpAPI...`);
+          imageUrl = await searchAndEnhanceImage(keywords);
+        }
+
+        if (!imageUrl) {
+          console.warn(`Slide ${i + 1}: All image generation methods failed`);
         }
 
         // Update slide with image (or keep text-only if image generation failed)
