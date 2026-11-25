@@ -243,6 +243,9 @@ Style: ${character.instruction}`;
           },
           { role: "user", content: prompt },
         ],
+        max_completion_tokens: 1024,
+        temperature: 1,
+        top_p: 1,
         stream: false,
       });
 
@@ -310,10 +313,8 @@ Style: ${character.instruction}`;
             content: `You are an expert keyword extractor for educational image generation.
 Extract 3-5 key visual concepts from the input text that would make excellent, concrete image prompts.
 Focus on tangible objects, scenes, processes, or concepts that can be visually represented.
-Avoid abstract concepts. Return as JSON format:
-{
-  "keywords": ["visual_concept_1", "visual_concept_2", "visual_concept_3"]
-}`,
+Avoid abstract concepts. You MUST respond with ONLY valid JSON, no extra text:
+{"keywords": ["visual_concept_1", "visual_concept_2", "visual_concept_3"]}`,
           },
           {
             role: "user",
@@ -321,15 +322,17 @@ Avoid abstract concepts. Return as JSON format:
           },
         ],
         temperature: 0.1,
-        max_tokens: 80,
-        response_format: { type: "json_object" },
+        max_completion_tokens: 150,
+        top_p: 1,
         stream: false,
       });
 
       const responseContent = completion.choices[0]?.message?.content;
 
       if (responseContent) {
-        const parsed = JSON.parse(responseContent);
+        // Strip markdown code fences if present (e.g. ```json ... ```)
+        const cleanJson = responseContent.replace(/```(?:json)?\s*([\s\S]*?)```/g, '$1').trim();
+        const parsed = JSON.parse(cleanJson);
         return Array.isArray(parsed.keywords) ? parsed.keywords : [];
       }
 
@@ -382,7 +385,8 @@ Be objective and focus on factual accuracy rather than presentation style.`;
           },
         ],
         temperature: 0.2,
-        max_tokens: 512,
+        max_completion_tokens: 1024,
+        top_p: 1,
         stream: false,
       });
       const responseText = completion.choices[0]?.message?.content || "";
@@ -547,7 +551,8 @@ Be objective and focus on factual accuracy rather than presentation style.`;
           },
         ],
         temperature: 0.5,
-        max_tokens: 1024,
+        max_completion_tokens: 2048,
+        top_p: 1,
         stream: false,
       });
       fullTextContent = completion.choices[0]?.message?.content || "";
