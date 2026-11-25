@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { getSlideById } from "../services/slidesService";
 import ResultsDisplay from "../components/ResultsDisplay";
 import SlideVideoGenerator from "../components/SlideVideoGenerator";
+import SlideQuizGenerator from "../components/SlideQuizGenerator";
 import { usePageLoading } from "../context/PageLoadingContext";
 import { ArrowLeft, Loader2, AlertCircle, BookOpen, Calendar, Clock } from "lucide-react";
 import { motion } from "framer-motion";
@@ -169,6 +170,7 @@ const SlideDetail = () => {
           transition={{ delay: 0.3, duration: 0.5 }}
         >
           <SlideVideoGenerator />
+          <SlideQuizGenerator topic={slide.topic} />
           <ResultsDisplay slides={slide.slidesData} />
         </motion.div>
 

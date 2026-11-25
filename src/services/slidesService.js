@@ -84,3 +84,31 @@ export const getSlideById = async (id) => {
     throw error;
   }
 };
+
+export const generateSlideQuiz = async (id, difficulty = "medium") => {
+  const token = getAuthToken();
+  if (!token) {
+    throw new Error("No access token found");
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/slides/${id}/quiz`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ difficulty }),
+    });
+
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to generate quiz");
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Generate quiz error:", error);
+    throw error;
+  }
+};
